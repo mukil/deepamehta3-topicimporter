@@ -1,7 +1,7 @@
 function dm3_topicimporter() {
 
 	// i don't know waht this is for ???
-	var LOG_TOPICMAPIMPORTER = false
+	var LOG_TOPICMAPIMPORTER = true
 
 	/**************************************************************************************************/
 	/**************************************** Overriding Hooks ****************************************/
@@ -10,14 +10,14 @@ function dm3_topicimporter() {
 	this.init = function() {
 		// add special command    
 		$("#special-select").append($("<option>").text("Topic Importer")) 
-    }
+  }
 
 	// register special command    
-   this.handle_special_command  = function(specialcommand) {
-   	// if we are called
+  this.handle_special_command  = function(specialcommand) {
+    // if we are called
 		if (specialcommand == "Topic Importer") {
 			// clear detail pane
-			$('#detail-panel').empty()
+			empty_detail_panel()
 			// add our user interface
 			$('#detail-panel').append('<div id="importerform"></div>')
 			$('#importerform').css('font-size', '10px')
@@ -67,7 +67,7 @@ function dm3_topicimporter() {
 			$('#uriold-0 option[value="1"]').attr('selected', 'selected');
 				
 			// send button
-			$('#importerform').append('<button id="importerformgo">go</button>')
+			$('#importerform').append('<button id="importerformgo">Create</button>')
 			$('#importerformgo').click(readtext)
 			// status message 
 		 	$('#importerform').append('<span id="importerformstatus">...</span>')
@@ -147,71 +147,70 @@ function dm3_topicimporter() {
 		var oa=lines_order()
 		var max_line=max_array(oa)
 		// ad some more empty lines to be sure to fill up the last (maybe to short) topic with fields
-		for (var i=0; i<max_line; i++) {
+		for ( var i=0; i < max_line; i++ ) {
 			lines.push("")
 		}
-		
-	  	// get selected topicid may be undefined
-	  	// if it is defined all newly imported topics will be related to this one
+    // get selected topicid may be undefined
+    // if it is defined all newly imported topics will be related to this one
 		var topicId = selected_topic
-		if (typeof(topicId) != "undefined") {
-      	topicId = topicId.id
-      } else {
-      	topicId = null
-      }
+		if ( typeof(topicId) != "undefined" ) {
+      topicId = topicId.id
+    } else {
+      topicId = null
+    }
 
-		// uri of the topic type we will create
-  	   var type_uri = ui.menu_item("create-type-menu").value
-		
+    // uri of the topic type we will create
+    var type_uri = ui.menu_item("create-type-menu").value
 		// some number magic for placement in rows and cols
 		var canvas_width=$('#canvas').width()
-		var topic_width=50
-		var topic_height=50
-		var start_x_pos=10
-		var x_pos=start_x_pos
-		var y_pos=10
+    // ### would be handy to query the canvas for the complete layoutBounds of a topicId
+		var topic_width = 50
+		var topic_height = 50
+		var start_x_pos = 10
+		var x_pos = start_x_pos
+		var y_pos = 10
 		// prop will hold the properties of the new topic
-		var prop=""
+		var prop = {}
 		// first_topicId will hold the first newly created topic to focus on it afterwards
-		var first_topicId=""
-
+		var first_topicId = ""
 		// go thorugh all lines
 		for (var i = 0, a = 1; i < lines.length; i++,a++) {
 			// if we have read enough lines create the topic
-			if (a>max_line && prop!="") {
-				var properties = JSON.parse('{'+prop+'}')
+			if ( a > max_line && prop.length != 0) {
 				// create topic
-				var topic = create_topic(type_uri, properties)
+				var topic = create_topic(type_uri, prop)
 				if (first_topicId=="") {
 					first_topicId=topic.id
 				}
 				// add it to canvas without redraw or selection
 				canvas.add_topic(topic.id, topic.type_uri, topic_label(topic), false, false, x_pos, y_pos)
 				// if there has been a selevt topic relate to it
-				if (topicId!=null) {
+				if ( topicId != null ) {
 	           var rel = create_relation("RELATION", topicId, topic.id)
    	         canvas.add_relation(rel.id, rel.src_topic_id, rel.dst_topic_id)				
 				}
 				// prepare for next topic
-				a=1
-				prop=""
-				// fill one row till the screen is full, the start the next row
-				x_pos+=topic_width
-				if (x_pos>=canvas_width) {
-					x_pos=start_x_pos
-					y_pos+=topic_height
+				a = 1
+				prop = {}
+				// fill one row till the canvas width is reached, then start a new row by shifting y_pos
+				x_pos += topic_width
+				if ( x_pos >= canvas_width ) {
+					x_pos = start_x_pos
+					y_pos += topic_height
 				}
 			}
 			// ommit empty lines
-			if (lines[i]!="") {
-				// see which uri will receive this line 
-				for (p=0; p<$('#num_fields').val();p++) {
-					if (oa[p]==a) {
-						prop += '"'+$('#urinew-'+p).text()+'": "'+lines[i]+'",'
-					}
-				}
-			}
-		}
+			if ( lines[i] != "" ) {
+				// see which uri will receive this line
+				for ( p=0; p < $('#num_fields').val(); p++ ) {
+					if ( oa[p] == a ) {
+            var key = $('#urinew-'+p).text()
+            var value = lines[i]
+            prop[key.toString()] = value.toString()
+          }
+        }
+      }
+    }
 		// redraw the canvas and focus on the first created topic
 		canvas.refresh()
 		if (first_topicId!="") {
