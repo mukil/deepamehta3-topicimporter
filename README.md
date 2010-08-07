@@ -37,12 +37,10 @@ input field:
     Mark, 011234567
     Melanie, 003135678
     Mavin, 1101023
-regexp search:  `/([^,]*),([^,]*)/g`
-regexp replace: `$1\n$2`
 
 Just make sure that you have the "Person" selected in your toolbar and choose Number "2" from the DropdownMenu next to "de/ deepamehta/core/property/Phone" to actually map the "2" regexp match in your line to the field "Phone" of a "Person".
 
-Before you press "Create", just check your settings on correctness through reading the lines in the updated preview field. After this you will have 3 Persons with Name and Phone in your Addressbook.
+Before you press "Start Import", just check your settings on correctness through reading the lines in the updated preview field. After this you will have 3 Persons with Name and Phone in your Addressbook.
 
 Version History
 ---------------
