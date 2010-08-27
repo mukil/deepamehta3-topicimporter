@@ -317,7 +317,7 @@ function dm3_topicimporter() {
     // redraw the canvas and focus on the first created topic
     canvas.refresh()
     if (first_topicId != "") {
-      canvas.focus_topic(first_topicId)
+      canvas.scroll_topic_to_center(first_topicId)
     }
     // status
     $('#importerformstatus').empty()
