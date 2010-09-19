@@ -24,15 +24,15 @@ function dm3_topicimporter() {
     // if we are called
     if (specialcommand == "Topic Importer") {
       // clear detail pane
-      empty_detail_panel()
+      dm3c.empty_detail_panel()
       // add our user interface
       $('#detail-panel').append('<div id="importerform"></div>')
       $('#importerform').css('font-size', '10px')
       $('#importerform').css('line-height', '1.2em')
       // the topic to which all imported items possibly will be related to 
       // must currently already be selected before starting the topic importer
-      if ( selected_topic != null)
-          if (typeof(selected_topic) != "undefined" ) topicToRelateTo = selected_topic.id;
+      if (dm3c.selected_topic != null)
+          if (typeof(dm3c.selected_topic) != "undefined" ) topicToRelateTo = dm3c.selected_topic.id;
       // rest of the user interface
       // ask user for file
       $('#importerform').append('<b>Enter text to import</b> and <b>select the fields delimiter</b>: &nbsp;')
@@ -54,7 +54,7 @@ function dm3_topicimporter() {
       $('#importerform').append('<input id="num_fields" type="hidden" value="0" />')
       $('#importerform').append('<table id="uritable"></table>')
       // get selected topictype from create menu
-      topicTypeToCreate = ui.menu_item("create-type-menu").value
+      topicTypeToCreate = dm3c.ui.menu_item("create-type-menu").value
       // and build up the field / uri matching form
       fillTypeUriTable()
       if (topicToRelateTo != "none.") $('#importerform').append('Topic Importer will relate all new topics ' 
@@ -156,7 +156,7 @@ function dm3_topicimporter() {
   function fillTypeUriTable() {
     // this part is to match a data field uri with a given line number
     // get uri of datafields
-    var fields=dmc.get_topic_type(topicTypeToCreate).fields
+    var fields=dm3c.restc.get_topic_type(topicTypeToCreate).fields
     // get the number of user fileds = total number minus the data fields
     var num_fields = fields.length-2
     $('#num_fields').val(num_fields); // update hidden number of fields
@@ -228,8 +228,8 @@ function dm3_topicimporter() {
 
   // write the parsed text to screen and append the user chosen line numbers
   function parsetext() {
-    if (topicTypeToCreate != ui.menu_item("create-type-menu").value) {
-        topicTypeToCreate = ui.menu_item("create-type-menu").value
+    if (topicTypeToCreate != dm3c.ui.menu_item("create-type-menu").value) {
+        topicTypeToCreate = dm3c.ui.menu_item("create-type-menu").value
         fillTypeUriTable()
     }
     var lines=do_parse()
@@ -281,16 +281,16 @@ function dm3_topicimporter() {
       // if we have read enough lines create the topic
       if (a > max_line && prop != {}) {
         // create topic
-        var topic = create_topic(topicTypeToCreate, prop)
+        var topic = dm3c.create_topic(topicTypeToCreate, prop)
         if (first_topicId == "") {
           first_topicId=topic.id
         }
         // add it to canvas without redraw or selection
-        canvas.add_topic(topic.id, topic.type_uri, topic_label(topic), false, false, x_pos, y_pos)
+        dm3c.canvas.add_topic(topic.id, topic.type_uri, dm3c.topic_label(topic), false, false, x_pos, y_pos)
         // if there has been a selevt topic relate to it
         if (topicToRelateTo != "none.") {
-          var rel = create_relation("RELATION", topicToRelateTo, topic.id)
-          canvas.add_relation(rel.id, rel.src_topic_id, rel.dst_topic_id)
+          var rel = dm3c.create_relation("RELATION", topicToRelateTo, topic.id)
+          dm3c.canvas.add_relation(rel.id, rel.src_topic_id, rel.dst_topic_id)
         }
         // prepare for next topic
         a = 1
@@ -315,9 +315,9 @@ function dm3_topicimporter() {
       }
     }
     // redraw the canvas and focus on the first created topic
-    canvas.refresh()
+    dm3c.canvas.refresh()
     if (first_topicId != "") {
-      canvas.scroll_topic_to_center(first_topicId)
+      dm3c.canvas.scroll_topic_to_center(first_topicId)
     }
     // status
     $('#importerformstatus').empty()
