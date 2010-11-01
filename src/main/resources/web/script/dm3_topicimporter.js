@@ -15,14 +15,13 @@ function dm3_topicimporter() {
   
 
   this.init = function() {
-    // add special command
-    $("#special-select").append($("<option>").text("Topic Importer"))
+    dm3c.add_to_special_menu({label: "Topic Importer..."})
   }
 
   // register special command
-  this.handle_special_command  = function(specialcommand) {
+  this.handle_special_command = function(specialcommand) {
     // if we are called
-    if (specialcommand == "Topic Importer") {
+    if (specialcommand == "Topic Importer...") {
       // clear detail pane
       dm3c.empty_detail_panel()
       // add our user interface
