@@ -310,10 +310,6 @@ function dm3_topicimporter() {
       }
     }
     dm3c.canvas.stop_grid_positioning()
-    // if imported topics will be associated to another one, select this as center
-    /*if (first_topicId != "") {
-      dm3c.canvas.scroll_topic_to_center(first_topicId)
-    }*/
     // status
     $('#importerformstatus').empty()
     $('#importerformstatus').append('Finished')
