@@ -275,17 +275,19 @@ function dm3_topicimporter() {
     var prop = {}
     // first_topicId will hold the first newly created topic to focus on it afterwards
     var first_topicId = ""
-    // go thorugh all lines
+    dm3c.canvas.start_grid_positioning()
+    // go through all lines first, before creating any topic
     for (var i = 0, a = 1; i < lines.length; i++, a++) {
-      // if we have read enough lines create the topic
-      if (a > max_line && prop != {}) {
+      // if we have read enough lines create a topic for each line
+      if (a > max_line) {
         // create topic
         var topic = dm3c.create_topic(topicTypeToCreate, prop)
         if (first_topicId == "") {
           first_topicId=topic.id
+          dm3c.add_topic_to_canvas(topic, "show")
+        } else {
+          dm3c.add_topic_to_canvas(topic, "none")
         }
-        // add it to canvas without redraw or selection
-        dm3c.canvas.add_topic(topic.id, topic.type_uri, dm3c.topic_label(topic), false, false, x_pos, y_pos)
         // if there has been a selevt topic relate to it
         if (topicToRelateTo != "none.") {
           var rel = dm3c.create_relation("RELATION", topicToRelateTo, topic.id)
@@ -294,12 +296,6 @@ function dm3_topicimporter() {
         // prepare for next topic
         a = 1
         prop = {}
-        // fill one row till the canvas width is reached, then start a new row by shifting y_pos
-        x_pos += topic_width
-        if (x_pos >= canvas_width) {
-          x_pos = start_x_pos
-          y_pos += topic_height
-        }
       }
       // ommit empty lines
       if (lines[i] != "") {
@@ -313,11 +309,11 @@ function dm3_topicimporter() {
         }
       }
     }
-    // redraw the canvas and focus on the first created topic
-    dm3c.canvas.refresh()
-    if (first_topicId != "") {
+    dm3c.canvas.stop_grid_positioning()
+    // if imported topics will be associated to another one, select this as center
+    /*if (first_topicId != "") {
       dm3c.canvas.scroll_topic_to_center(first_topicId)
-    }
+    }*/
     // status
     $('#importerformstatus').empty()
     $('#importerformstatus').append('Finished')
