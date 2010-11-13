@@ -8,6 +8,8 @@ function dm3_topicimporter() {
   var topicTypeToCreate = "";
   var topicToRelateTo = "none.";
 
+
+
   // --------------------
   // --- Overriding Hooks
   // --------------------
@@ -60,7 +62,7 @@ function dm3_topicimporter() {
         + 'to the currently selected topic in the map <b id="selectedInfo"> (ID: ' + topicToRelateTo + ')</b><br/>')
       // send button
       $('#importerform').append('<button id="importerformgo">Start Import</button>')
-      $('#importerformgo').click(doCreations);
+      $('#importerformgo').click(do_creations);
       // status message
       $('#importerform').append('<span id="importerformstatus"> Awaiting Configuration </span> <p/>')
       $('#importerform').append('<br/><b>Advanced Configuration for expert users</b><br/><label for="regexps">Regexp Search</label>&nbsp;<input id="regexps" cols="41" type="text" value="/(.*)/g"/><br />')
@@ -69,7 +71,7 @@ function dm3_topicimporter() {
   }
 
   function buildPreview() {
-      buildRegexp()
+      buildRegexp({}) // without any field-settings
       parsetext()
   }
 
@@ -80,7 +82,6 @@ function dm3_topicimporter() {
       for (p = 0; p < $('#num_fields').val(); p++) {
           var value = $('#uriold-'+p).val();
           if (value != 0) {
-              var key = $('#uriold-'+p).text();
               fieldAtNumber.key = value;
               wantedFields.push(fieldAtNumber);
           }
@@ -167,24 +168,23 @@ function dm3_topicimporter() {
       selectoptions+='<option value="' + i + '">' + i + '</option>'
     }
     selectoptions+='<option value="0" selected="selected">-</option>'
-      for (var i = 0, a = 0, field; field = fields[i]; i++) {
-        // omit the data fields
-        if ( field.uri != "de/deepamehta/core/property/DateCreated" &&
-          field.uri != "de/deepamehta/core/property/DateModified") {
-          var urio = 'uriold-' + a
-          $('#uritable').append('<tr><td id="urinew-'+a+'">' + field.uri + '</td>'
-            + '<td><select id="' + urio + '" size="1">' + selectoptions + '</select></tr>')
-          $('#' + urio).change(handleDataFieldChange)
-          a++
+    for (var idx = 0, a = 0, field; field = fields[idx]; idx++) {
+      // omit the data fields
+      if ( field.uri != "de/deepamehta/core/property/DateCreated" &&
+        field.uri != "de/deepamehta/core/property/DateModified") {
+        var urio = 'uriold-' + a
+        $('#uritable').append('<tr><td id="urinew-'+a+'">' + field.uri + '</td>'
+          + '<td><select id="' + urio + '" size="1">' + selectoptions + '</select></tr>')
+        $('#' + urio).change(handleDataFieldChange)
+        a++
       }
     }
     // assume the topmost uri is the label, so select this as default for line number 1
     $('#uriold-0 option[value="1"]').attr('selected', 'selected');
   }
 
-  // parse the pasted text
-  // apply the regexp
-  // return an array of lines 
+  // parse the pasted text, apply the regexp (which matches either on COMMA or TAB)
+  // return an array of lines == potential topics
   function do_parse() {
     var otext=$('#importtext').val()
     // first user regexp
@@ -203,9 +203,9 @@ function dm3_topicimporter() {
     return lines
   }
 
-  // go through the user given order of uri to line numbers
-  // return array of ids of the uri fields and their according numbers
-  function lines_order() {
+  // go through the user given order of uri to line numbers and
+  // return an associative array where elements are [datafield uri]=field_index
+  function get_field_uri_mapping() {
     var oa = new Array()
     for (var i = 0; i < $('#num_fields').val(); i++) {
       var urio = 'uriold-' + i
@@ -214,7 +214,7 @@ function dm3_topicimporter() {
     return oa
   }
 
-  // calc max of an array
+  // find the numeric max in an array of numbers
   function max_array(arr) {
     var max=Number.MIN_VALUE;
     for (var i = 0; i < arr.length; i++) {
@@ -228,15 +228,15 @@ function dm3_topicimporter() {
   // write the parsed text to screen and append the user chosen line numbers
   function parsetext() {
     if (topicTypeToCreate != dm3c.ui.menu_item("create-type-menu").value) {
-        topicTypeToCreate = dm3c.ui.menu_item("create-type-menu").value
-        fillTypeUriTable()
+      topicTypeToCreate = dm3c.ui.menu_item("create-type-menu").value
+      fillTypeUriTable()
     }
     var lines=do_parse()
-    var max_line=max_array(lines_order())
+    var max_line=max_array(get_field_uri_mapping())
     // clear the textbox and fill it again
     $('#parsedtext').empty()
     // the numbers in front of the line correspond to the line numbers the field uris are related to
-    for (i = 0, a = 1; i < lines.length; i++, a++) {
+    for (var i = 0, a = 1; i < lines.length; i++, a++) {
       if (a > max_line) {
         a = 1
       }
@@ -249,61 +249,53 @@ function dm3_topicimporter() {
   }   
 
   // do the work, read the text and create the topics
-  function doCreations() {
+  function do_creations() {
     // status
     $('#importerformstatus').empty()
     $('#importerformstatus').append(' importing..')
 
-    // get text
+    // get lines/topics from text
     var lines=do_parse()
-    var oa=lines_order()
-    var max_line=max_array(oa)
-    // ad some more empty lines to be sure to fill up the last (maybe to short) topic with fields
-    for ( var i = 0; i < max_line; i++ ) {
+    // 
+    var uri_field_map=get_field_uri_mapping()
+    var number_of_wanted_fields=max_array(uri_field_map)
+    // add some empty fields just to be sure to fill up the last line
+    for ( var lj = 0; lj < number_of_wanted_fields; lj++ ) {
+      // adding a line? cause there are to less fields?
       lines.push("")
     }
-
-    // some number magic for placement in rows and cols
-    var canvas_width=$('#canvas').width()
-    // ### would be handy to query the canvas for the complete layoutBounds of a topicId
-    var topic_width = 50
-    var topic_height = 50
-    var start_x_pos = 10
-    var x_pos = start_x_pos
-    var y_pos = 10
     // prop will hold the properties of the new topic
     var prop = {}
-    // first_topicId will hold the first newly created topic to focus on it afterwards
-    var first_topicId = ""
     dm3c.canvas.start_grid_positioning()
-    // go through all lines first, before creating any topic
-    for (var i = 0, a = 1; i < lines.length; i++, a++) {
-      // if we have read enough lines create a topic for each line
-      if (a > max_line) {
+    // go through all lines first, before creating any topic with a really crazy loop
+    for (var lineIdx = 0, fieldIdx = 1; lineIdx < lines.length; lineIdx++, fieldIdx++) {
+      // if we have read enough fields to create a topic, we create one for each line
+      // through manipulating fieldIdx
+      if (fieldIdx > number_of_wanted_fields) {
         // create topic
         var topic = dm3c.create_topic(topicTypeToCreate, prop)
-        if (first_topicId == "") {
-          first_topicId=topic.id
+        if (lineIdx == 2) { // this is the second time all lines are iterated making 1=2 and 2=4
           dm3c.add_topic_to_canvas(topic, "show")
         } else {
           dm3c.add_topic_to_canvas(topic, "none")
         }
-        // if there has been a selevt topic relate to it
+        // if there has been a topic selected, relate to it
         if (topicToRelateTo != "none.") {
           var rel = dm3c.create_relation("RELATION", topicToRelateTo, topic.id)
           dm3c.canvas.add_relation(rel.id, rel.src_topic_id, rel.dst_topic_id)
         }
-        // prepare for next topic
-        a = 1
+        // prepare? for next topic
+        fieldIdx = 1
         prop = {}
       }
-      // ommit empty lines
-      if (lines[i] != "") {
-        // see which uri will receive this line
-        for (p = 0; p < $('#num_fields').val(); p++) {
-          if (oa[p] == a) {
+      // for each line/topic
+      // start to fill the properties of the current topic and ommit empty lines
+      if (lines[lineIdx] != "") {
+        // see which uri will receive this field
+        for (var p = 0; p < $('#num_fields').val(); p++) {
+          if (uri_field_map[p] == fieldIdx) {
             var key = $('#urinew-'+p).text()
-            var value = lines[i]
+            var value = lines[lineIdx]
             prop[key.toString()] = value.toString()
           }
         }
