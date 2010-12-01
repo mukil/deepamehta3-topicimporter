@@ -42,11 +42,11 @@ function dm3_topicimporter() {
       $('#importerform').append('<textarea id="importtext" cols="40", rows="4"></textarea><br/>')
       // $('#importerform').append('<a href="buildPreview()"><b>Generate Preview</b></a><br/>')
       // edit content and options triggers regexp analysis
-      $('#delimiterSelect').bind('mouseover change', buildPreview)
-      // $('#importtext').bind('change', buildPreview ) // deactivated
+      $('#delimiterSelect').bind('change', buildPreview)
+      $('#importtext').bind('change', buildPreview ) // re-activated
       // fine tuning triggers just the parsetext again
-      $('#regexpr').bind('mouseover change', parsetext )
-      $('#regexps').bind('mouseover change', parsetext )
+      $('#regexpr').bind('change', parsetext )
+      $('#regexps').bind('change', parsetext )
       $('#importerform').append('<br/><b>Content Live Preview</b><div id="parsedtext"></div>')
       $('#parsedtext').css('height', '100px')
       $('#parsedtext').css('position', 'relative')
@@ -271,7 +271,7 @@ function dm3_topicimporter() {
     for (var lineIdx = 0, fieldIdx = 1; lineIdx < lines.length; lineIdx++, fieldIdx++) {
       // if we have read enough fields to create a topic, we create one for each line
       // through manipulating fieldIdx
-      if (fieldIdx > number_of_wanted_fields) {
+      if (fieldIdx > number_of_wanted_fields && js.size(prop) > 0) {
         // create topic
         var topic = dm3c.create_topic(topicTypeToCreate, prop)
         if (lineIdx == 2) { // this is the second time all lines are iterated making 1=2 and 2=4
