@@ -46,7 +46,7 @@ Before you press "Start Import", just check your settings on correctness through
 Version History
 ---------------
 
-**v0.4.2** -- upcoming
+**v0.4.2** -- Dec 7, 2010
 
 * Compatible with DeepaMehta 3 v0.4.3
 
@@ -62,4 +62,4 @@ Version History
 
 ------------
 Authors: Torsten Ziegler info aed ziegi.de / Co-Author: Malte Reißig malte aed deepamehta.org  
-Last Modified: Nov 25, 2010
+Last Modified: Dec 7, 2010
